@@ -14,6 +14,6 @@ export default defineConfig({
     dedupe: ["react", "react-dom", "react-router", "react-router-dom", "@phosphor-icons/react"],
   },
   server: {
-    port: 5145,
+    port: 5175,
   },
 })
