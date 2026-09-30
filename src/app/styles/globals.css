@@ -1,2 +1,14 @@
-@import "tailwindcss";
+/* Hoja única de la app: se enlaza desde index.html (no se importa desde JS) */
+@layer theme, base, components, utilities;
+
+/* Fuentes: el tema de bibliotk-ui las nombra, pero no las incluye */
+@import "@fontsource-variable/bricolage-grotesque/opsz.css";
+@import "@fontsource-variable/geist";
+
+/* CSS ya compilado de bibliotk-ui: reset, tokens, estilos base y componentes */
+@import "bibliotk-ui/styles.css";
+
+/* Tailwind solo genera las utilidades de esta app (el reset ya viene en la hoja de la librería) */
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css" layer(utilities);
 @import "bibliotk-ui/theme.css";

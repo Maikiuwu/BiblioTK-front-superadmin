@@ -1,11 +1,20 @@
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { PanelLayout } from "bibliotk-ui";
 import { Navigate, Outlet, Route, Routes } from "react-router-dom";
 
 import { getCurrentSession, logoutUser } from "../../service/LoginService.js";
 
 import Home from "./Home.jsx";
-import UserDashboard from "./UserDashboard.jsx";
+
+// El resumen llega en el paquete inicial; la dona de usuarios se descarga aparte
+const cargarUserDashboard = () => import("./UserDashboard.jsx");
+const UserDashboard = lazy(cargarUserDashboard);
+
+// La sesión se pide apenas carga el módulo, sin esperar al primer render
+const sesionInicial = getCurrentSession().then(
+	(session) => ({ session }),
+	(error) => ({ error }),
+);
 
 const LOGIN_URL = import.meta.env.VITE_LOGIN_APP_URL ?? "http://localhost:5172";
 
@@ -27,18 +36,20 @@ function ProtectedApp() {
 	useEffect(() => {
 		let isActive = true;
 
-		getCurrentSession()
-			.then((session) => {
-				if (!isActive) return;
-				const currentUser = getSessionUser(session);
-				setUser(currentUser);
-				setStatus(
-					getSessionRole(currentUser) === "superadmin" ? "ready" : "forbidden",
-				);
-			})
-			.catch(() => {
-				if (isActive) setStatus("unauthenticated");
-			});
+		sesionInicial.then(({ session, error }) => {
+			if (!isActive) return;
+
+			if (error) {
+				setStatus("unauthenticated");
+				return;
+			}
+
+			const currentUser = getSessionUser(session);
+			setUser(currentUser);
+			setStatus(
+				getSessionRole(currentUser) === "superadmin" ? "ready" : "forbidden",
+			);
+		});
 
 		return () => {
 			isActive = false;
@@ -52,6 +63,13 @@ function ProtectedApp() {
 			window.location.assign(`${LOGIN_URL}/login?motivo=sesion_expirada`);
 		} else if (status === "forbidden") {
 			window.location.assign(`${LOGIN_URL}/login?motivo=sin_permiso`);
+		} else if (status === "ready") {
+			// Con el panel en pantalla, la dona se baja cuando el navegador queda libre
+			if ("requestIdleCallback" in window) {
+				requestIdleCallback(cargarUserDashboard);
+			} else {
+				setTimeout(cargarUserDashboard, 200);
+			}
 		}
 	}, [status]);
 
@@ -78,7 +96,9 @@ function ProtectedApp() {
 						userLabel={user?.email ?? user?.correo}
 						onLogout={handleLogout}
 					>
-						<Outlet />
+						<Suspense fallback={null}>
+							<Outlet />
+						</Suspense>
 					</PanelLayout>
 				}
 			>

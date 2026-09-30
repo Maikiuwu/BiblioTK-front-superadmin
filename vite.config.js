@@ -15,5 +15,9 @@ export default defineConfig({
   },
   server: {
     port: 5175,
+    // Transforma el arranque apenas se levanta el servidor, antes de que llegue el navegador
+    warmup: {
+      clientFiles: ['./src/main.jsx', './src/app/pages/*.jsx'],
+    },
   },
 })

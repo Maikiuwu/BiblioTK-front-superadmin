@@ -1,10 +1,8 @@
-import {
-	ArrowsLeftRight,
-	ArrowUpRight,
-	ChartLineUp,
-	Clock,
-	UsersThree,
-} from "@phosphor-icons/react";
+import { ArrowsLeftRight } from "@phosphor-icons/react/ArrowsLeftRight";
+import { ArrowUpRight } from "@phosphor-icons/react/ArrowUpRight";
+import { ChartLineUp } from "@phosphor-icons/react/ChartLineUp";
+import { Clock } from "@phosphor-icons/react/Clock";
+import { UsersThree } from "@phosphor-icons/react/UsersThree";
 import { cn, formatNumber, formatToday } from "bibliotk-ui";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";

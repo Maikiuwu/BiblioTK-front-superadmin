@@ -1,4 +1,5 @@
-import { ArrowsClockwise, UsersThree } from "@phosphor-icons/react";
+import { ArrowsClockwise } from "@phosphor-icons/react/ArrowsClockwise";
+import { UsersThree } from "@phosphor-icons/react/UsersThree";
 import { Alert, Button, DonutChart } from "bibliotk-ui";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { getUserRoleStats } from "../../service/UserService.js";
