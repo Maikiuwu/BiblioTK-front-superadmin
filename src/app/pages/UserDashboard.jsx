@@ -3,6 +3,7 @@ import { UsersThree } from "@phosphor-icons/react/UsersThree";
 import { Alert, Button, DonutChart } from "bibliotk-ui";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { getUserRoleStats } from "../../service/UserService.js";
+import CuentasUsuarios from "./CuentasUsuarios.jsx";
 
 // El color sigue al rol (nunca a su posición): si un rol queda en 0 los demás no cambian de color
 const roles = [
@@ -74,7 +75,7 @@ function UserDashboard() {
 					Usuarios registrados
 				</h1>
 				<p className="mt-4 max-w-xl text-base leading-relaxed text-ink-soft">
-					Consulta la distribución de usuarios según su rol en la biblioteca.
+					Consulta cuántos usuarios hay de cada rol y cambia el rol de cualquier cuenta.
 				</p>
 			</header>
 
@@ -142,6 +143,8 @@ function UserDashboard() {
 					)}
 				</section>
 			)}
+
+			<CuentasUsuarios onCambio={loadRoleStats} />
 		</>
 	);
 }

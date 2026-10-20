@@ -85,8 +85,8 @@ function UsersTile() {
 					Usuarios
 				</h2>
 				<p className="mt-4 max-w-md text-[15px] leading-relaxed text-pine-200">
-					Consulta la información de todos los usuarios registrados en la
-					biblioteca.
+					Consulta todos los usuarios registrados en la biblioteca y cambia
+					su rol.
 				</p>
 			</div>
 		</Link>
