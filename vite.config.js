@@ -1,23 +1,29 @@
 import react, { reactCompilerPreset } from '@vitejs/plugin-react'
 import babel from '@rolldown/plugin-babel'
 import tailwindcss from '@tailwindcss/vite'
-import { defineConfig } from 'vite'
+import { defineConfig, loadEnv } from 'vite'
 
 // https://vite.dev/config/
-export default defineConfig({
-  plugins: [
-    react(),
-    babel({ presets: [reactCompilerPreset()] }),
-    tailwindcss()
-  ],
-  resolve: {
-    dedupe: ["react", "react-dom", "react-router", "react-router-dom", "@phosphor-icons/react"],
-  },
-  server: {
-    port: 5175,
-    // Transforma el arranque apenas se levanta el servidor, antes de que llegue el navegador
-    warmup: {
-      clientFiles: ['./src/main.jsx', './src/app/pages/*.jsx'],
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, '.', '')
+
+  return {
+    // Detrás del gateway la app vive en una subruta (VITE_BASE=/superadmin/); en desarrollo, en la raíz
+    base: env.VITE_BASE || '/',
+    plugins: [
+      react(),
+      babel({ presets: [reactCompilerPreset()] }),
+      tailwindcss()
+    ],
+    resolve: {
+      dedupe: ["react", "react-dom", "react-router", "react-router-dom", "@phosphor-icons/react"],
     },
-  },
+    server: {
+      port: Number(env.VITE_PORT) || 5175,
+      // Transforma el arranque apenas se levanta el servidor, antes de que llegue el navegador
+      warmup: {
+        clientFiles: ['./src/main.jsx', './src/app/pages/*.jsx'],
+      },
+    },
+  }
 })
