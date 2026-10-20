@@ -2,7 +2,11 @@ import { lazy, Suspense, useEffect, useState } from "react";
 import { PanelLayout } from "bibliotk-ui";
 import { Navigate, Outlet, Route, Routes } from "react-router-dom";
 
-import { getCurrentSession, logoutUser } from "../../service/LoginService.js";
+import {
+	esSesionDeEstaApp,
+	getCurrentSession,
+	logoutUser,
+} from "../../service/LoginService.js";
 
 import Home from "./Home.jsx";
 
@@ -18,15 +22,14 @@ const sesionInicial = getCurrentSession().then(
 
 const LOGIN_URL = import.meta.env.VITE_LOGIN_APP_URL ?? "http://localhost:5172";
 
-function getSessionUser(session) {
-	return session?.user ?? session ?? null;
+// VITE_LOGIN_APP_URL puede venir con "/" final o incluso con "/login": la ruta se resuelve
+// sobre su origen para no terminar en "//login" (que la landing no reconoce)
+function landingUrl(ruta) {
+	return new URL(ruta, LOGIN_URL).toString();
 }
 
-function getSessionRole(user) {
-	return String(user?.rol ?? user?.role ?? "")
-		.trim()
-		.toLowerCase()
-		.replace(/\s+/g, "");
+function getSessionUser(session) {
+	return session?.user ?? session ?? null;
 }
 
 function ProtectedApp() {
@@ -44,11 +47,8 @@ function ProtectedApp() {
 				return;
 			}
 
-			const currentUser = getSessionUser(session);
-			setUser(currentUser);
-			setStatus(
-				getSessionRole(currentUser) === "superadmin" ? "ready" : "forbidden",
-			);
+			setUser(getSessionUser(session));
+			setStatus(esSesionDeEstaApp(session) ? "ready" : "forbidden");
 		});
 
 		return () => {
@@ -57,12 +57,61 @@ function ProtectedApp() {
 	}, []);
 
 	useEffect(() => {
-		// Sin sesión o con otro rol: esta app no tiene "/" propio, se vuelve a la landing.
+		// Con "atrás" el navegador puede mostrar la página tal como quedó (bfcache) sin volver a pedir
+		// la sesión, y otra pestaña pudo cerrarla: cada vez que la página vuelve a verse se le pregunta
+		// al servidor. Al salir se oculta, para que no se alcance a ver si la sesión ya no existe
+		let revisando = false;
+
+		async function revalidarSesion() {
+			if (revisando) return;
+			revisando = true;
+
+			try {
+				const session = await getCurrentSession();
+
+				if (esSesionDeEstaApp(session)) {
+					document.documentElement.style.visibility = "";
+				} else {
+					window.location.replace(landingUrl("/login?motivo=sin_permiso"));
+				}
+			} catch {
+				window.location.replace(landingUrl("/login?motivo=sesion_expirada"));
+			} finally {
+				revisando = false;
+			}
+		}
+
+		function ocultarAlSalir() {
+			document.documentElement.style.visibility = "hidden";
+		}
+
+		function revisarAlVolver(event) {
+			if (event.persisted) revalidarSesion();
+		}
+
+		function revisarAlMostrarPestana() {
+			if (document.visibilityState === "visible") revalidarSesion();
+		}
+
+		window.addEventListener("pagehide", ocultarAlSalir);
+		window.addEventListener("pageshow", revisarAlVolver);
+		document.addEventListener("visibilitychange", revisarAlMostrarPestana);
+
+		return () => {
+			window.removeEventListener("pagehide", ocultarAlSalir);
+			window.removeEventListener("pageshow", revisarAlVolver);
+			document.removeEventListener("visibilitychange", revisarAlMostrarPestana);
+		};
+	}, []);
+
+	useEffect(() => {
+		// Sin sesión o con otra cuenta: esta app no tiene "/" propio, se vuelve a la landing.
 		// El motivo viaja por la URL porque no hay forma de pasar estado de React entre apps.
+		// replace (no assign): así "atrás" no regresa a una página que solo vuelve a redirigir
 		if (status === "unauthenticated") {
-			window.location.assign(`${LOGIN_URL}/login?motivo=sesion_expirada`);
+			window.location.replace(landingUrl("/login?motivo=sesion_expirada"));
 		} else if (status === "forbidden") {
-			window.location.assign(`${LOGIN_URL}/login?motivo=sin_permiso`);
+			window.location.replace(landingUrl("/login?motivo=sin_permiso"));
 		} else if (status === "ready") {
 			// Con el panel en pantalla, la dona se baja cuando el navegador queda libre
 			if ("requestIdleCallback" in window) {
@@ -73,11 +122,12 @@ function ProtectedApp() {
 		}
 	}, [status]);
 
+	// replace: la página del panel sale del historial y "atrás" no vuelve a ella
 	async function handleLogout() {
 		try {
 			await logoutUser();
 		} finally {
-			window.location.assign(LOGIN_URL);
+			window.location.replace(LOGIN_URL);
 		}
 	}
 

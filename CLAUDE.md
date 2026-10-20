@@ -7,7 +7,7 @@ Parte del sistema BiblioTK (ver `../CLAUDE.md`). Vista y control de usuarios par
 - **CSS:** `src/app/styles/globals.css`, enlazado con `<link>` en `index.html` (no se importa desde `main.jsx`). Ver `../UiBiblioTK/CLAUDE.md`.
 - **Íconos:** un import por ícono (`@phosphor-icons/react/UsersThree`); ESLint prohíbe el paquete entero.
 - **Carga:** `Home` va en el paquete inicial; la dona (`UserDashboard`) se carga con `React.lazy` y se precarga cuando el navegador queda libre. La sesión se pide al cargar `App.jsx`.
-- **Acceso:** solo rol `superadmin`. Sin sesión o con otro rol, redirige a `${LOGIN_URL}/login?motivo=sesion_expirada|sin_permiso` (ver "Mensajes tras un redirect entre apps" en `BiblioTK-front/CLAUDE.md`).
+- **Acceso:** solo cuentas `superadmin`, pero el front nunca ve el rol: `esSesionDeEstaApp` (`LoginService.js`) compara el origen del `destino` que devuelve `GET /Sesion` (sin caché) con el de esta app. Sin sesión o con una cuenta de otra app se reemplaza (`location.replace`) por la landing con `?motivo=sesion_expirada|sin_permiso` (URL armada con `new URL(ruta, VITE_LOGIN_APP_URL)`; ver "Mensajes tras un redirect entre apps" en `BiblioTK-front/CLAUDE.md`); cerrar sesión también usa `replace`. La sesión se vuelve a consultar cada vez que la página vuelve a mostrarse (bfcache con "atrás" o al volver a la pestaña) y la página se oculta al salir. Igual que en `BiblioTK-front-user`.
 
 ## Estructura
 
@@ -15,11 +15,11 @@ Parte del sistema BiblioTK (ver `../CLAUDE.md`). Vista y control de usuarios par
 src/
   app/
     pages/
-      App.jsx           # Rutas, guarda de rol "superadmin", PanelLayout
+      App.jsx           # Rutas, guarda de sesión, PanelLayout
       Home.jsx           # /HomeSuperAdmin — cuadro grande "Usuarios" (cuenta real) + Préstamos/Reportes
       UserDashboard.jsx  # /usuarios — dona de usuarios por rol
   service/
-    LoginService.js  # getCurrentSession, logoutUser → :3001
+    LoginService.js  # getCurrentSession, esSesionDeEstaApp, logoutUser → :3001
     UserService.js   # getUserRoleStats → :3002 (BackDashboardBiblioTK)
 ```
 
