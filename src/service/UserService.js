@@ -6,7 +6,9 @@ export async function getUserRoleStats() {
 	let response;
 
 	try {
+		// La cookie de sesión viaja con la petición: el dashboard solo responde a un superadministrador
 		response = await fetch(usersDashboardUrl, {
+			credentials: "include",
 			cache: "no-store",
 		});
 	} catch {

@@ -20,7 +20,7 @@ src/
       UserDashboard.jsx  # /usuarios — dona de usuarios por rol
   service/
     LoginService.js  # getCurrentSession, esSesionDeEstaApp, logoutUser → :3001
-    UserService.js   # getUserRoleStats → :3002 (BackDashboardBiblioTK)
+    UserService.js   # getUserRoleStats → :3004 (BackDashboardBiblioTK, con la cookie de sesión: solo superadmin)
 ```
 
 Sin tarjeta "Libros" (eso es responsabilidad exclusiva de `admin`/bibliotecario ahora) ni tarjeta de perfil, ni ruta `/perfil` — mismo criterio que el `admin` viejo: los roles de gestión no la tienen.
